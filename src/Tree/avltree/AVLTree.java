@@ -1,0 +1,476 @@
+package Tree.avltree;
+
+
+import org.junit.Test;
+
+/**
+ * @ClassName AVLTree
+ * @Description:
+ * @Author:ypa
+ * @Date 2021/5/25 21:55
+ * @Version:1.0
+ */
+public class AVLTree {
+    @Test
+    public void test() {
+        int[] arr = {10, 12, 8, 9, 7, 6};
+        AVLTree avl = new AVLTree();
+        for (int i = 0; i < arr.length; ++i) {
+            avl.add(new Node(arr[i]));
+        }
+        System.out.println("avl树的高度是" + avl.height());
+        System.out.println("avl左子树的高度是" + avl.leftHeight());
+        System.out.println("avl右子树的高度是" + avl.rightHeight());
+        avl.midOrder();
+
+    }
+
+    private Node root;
+
+    /**
+     * @Description: 前序遍历
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/24
+     */
+    public void midOrder() {
+        if (root != null) {
+            root.midOrder();
+        } else {
+            System.out.println("根节点为空无法遍历");
+            return;
+        }
+    }
+
+    /**
+     * @Description: 加入节点，形成排序二叉树
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/24
+     */
+    public void add(Node node) {
+
+        if (root == null)
+            root = node;
+        else
+            root.add(node);
+    }
+
+    /**
+     * @Description: 查找要删除的节点
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/24
+     */
+    public Node search(int targrt) {
+        if (root == null) {
+            return null;
+        } else {
+            return root.search(targrt);
+        }
+    }
+
+    /**
+     * @Description: 查找要删除节点的父节点
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/24
+     */
+    public Node searchParent(int target) {
+        if (root == null) {
+            return null;
+        } else {
+            return root.searchParent(target);
+        }
+    }
+
+    /**
+     * @Description: 删除节点
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/25
+     */
+    /*
+
+            7
+          /   \
+         3     10
+       /  \    / \
+      1    5   9  12
+      \
+       2
+        第一种情况:
+        删除叶子节点 (比如：2, 5, 9, 12)
+        思路
+        (1) 需求先去找到要删除的结点  targetNode
+        (2)  找到targetNode 的 父结点 parent
+        (3)  确定 targetNode 是 parent的左子结点 还是右子结点
+        (4)  根据前面的情况来对应删除
+        左子结点 parent.left = null
+        右子结点 parent.right = null;
+        第二种情况: 删除只有一颗子树的节点 比如 1
+        思路
+        (1) 需求先去找到要删除的结点  targetNode
+        (2)  找到targetNode 的 父结点 parent
+        (3) 确定targetNode 的子结点是左子结点还是右子结点
+        (4) targetNode 是 parent 的左子结点还是右子结点
+        (5) 如果targetNode 有左子结点
+        5. 1 如果 targetNode 是 parent 的左子结点
+        parent.left = targetNode.left;
+        5.2  如果 targetNode 是 parent 的右子结点
+        parent.right = targetNode.left;
+        (6) 如果targetNode 有右子结点
+        6.1 如果 targetNode 是 parent 的左子结点
+        parent.left = targetNode.right;
+        6.2 如果 targetNode 是 parent 的右子结点
+        parent.right = targetNode.right
+
+
+        情况三 ： 删除有两颗子树的节点. (比如：7, 3，10 )
+        思路
+        (1) 需求先去找到要删除的结点  targetNode
+        (2)  找到targetNode 的 父结点 parent
+        (3)  从targetNode 的右子树找到最小的结点
+        (4) 用一个临时变量，将 最小结点的值保存 temp = 11
+        (5)  删除该最小结点
+        (6)  targetNode.value = temp
+    * */
+    public void delete(int target) {
+        Node targetNode = search(target);
+        if (targetNode == null) {
+            return;
+        }
+        Node parentNode = searchParent(target);
+        if (parentNode == null) {//找到了目标节点，但是没有父节点 ，表明该树只有一个root节点
+            root = null;
+            return;
+        }
+        if (targetNode.left == null && targetNode.right == null) {//表明要输出的是叶子节点
+            if (parentNode.left == targetNode) {//parent的左子结点
+                parentNode.left = null;
+            } else if (parentNode.right == targetNode) {//parent的右子结点
+                parentNode.right = null;
+            }
+            return;
+        } else if (targetNode.right != null && targetNode.left != null) {//删除有两颗子树的节点
+            int minvalue = deleteLeftMinNode(targetNode);
+            targetNode.value = minvalue;
+            return;
+        } else {//删除只有一个子树的节点
+            /*
+                    10
+                    /
+                   1
+                   此时如果要删除10 ，则需要注意 它的父节点为空，下面要左判断
+            * */
+            if (targetNode.left != null) {//targetNode 有左子结点
+                if (parentNode == null) {
+                    root = targetNode.left;
+                } else {
+                    if (parentNode.left == targetNode) {//targetNode 是 parent 的左子结点
+                        parentNode.left = targetNode.left;
+                    } else if (parentNode.right == targetNode) {//targetNode 是 parent 的右子结点
+                        parentNode.right = targetNode.left;
+                    }
+                }
+                return;
+            }
+            if (targetNode.right != null) {//targetNode 有右子结点
+                if (parentNode == null) {
+                    root = targetNode.right;
+                } else {
+                    if (parentNode.left == targetNode) {//targetNode 是 parent 的左子结点
+                        parentNode.left = targetNode.right;
+                    } else if (parentNode.right == targetNode) {//targetNode 是 parent 的右子结点
+                        parentNode.right = targetNode.right;
+                    }
+                }
+                return;
+            }
+        }
+    }
+
+    /**
+     * @Description: 遍历子树的右节点寻找最小的节点，同时删除最小值节点
+     * @Param:
+     * @return: 最小的节点的value
+     * @Author: ypa
+     * @Date: 2021/5/25
+     */
+    private int deleteLeftMinNode(Node target) {
+        Node temp = target;
+        while (target.left != null) {
+            target = target.left;
+        }
+        delete(target.value);
+        return target.value;
+    }
+
+    /**
+     * @Description: 求树的高度
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/25
+     */
+    public int height() {
+        if (root == null) {
+            return 0;
+        } else {
+            return root.height();
+        }
+    }
+
+    /**
+     * @Description: 求左子树的高度
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/25
+     */
+    public int leftHeight() {
+        if (root == null) {
+            return 0;
+        } else {
+            return root.leftHeight();
+        }
+    }
+
+    /**
+     * @Description: 右子树的高度
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/25
+     */
+    public int rightHeight() {
+        if (root == null) {
+            return 0;
+        } else {
+            return root.rightHeight();
+        }
+    }
+}
+
+class Node {
+    int value;
+    Node left;
+    Node right;
+
+    public Node(int value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "value=" + value +
+                '}';
+    }
+
+    /**
+     * @Description: 中序遍历
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/24
+     */
+    public void midOrder() {
+        if (this.left != null)
+            this.left.midOrder();
+        System.out.println(this);
+        if (this.right != null)
+            this.right.midOrder();
+    }
+
+    /**
+     * @Description: 创建二叉排序数
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/24
+     */
+    public void add(Node node) {
+        if (node == null) {
+            System.out.println("节点为空,无法加入！！");
+            return;
+        }
+        if (node.value < this.value) {
+            if (this.left == null) {
+                this.left = node;
+                //System.out.println("添加" + node + "成功");
+            } else {
+                this.left.add(node);
+            }
+        } else {
+            if (this.right == null) {
+                this.right = node;
+                //System.out.println("添加"+node+"成功");
+            } else {
+                this.right.add(node);
+            }
+        }
+
+        //当添加完一个节点之后 如果  右子树高度-左子树高度>1 左旋转
+        if (rightHeight() - leftHeight() > 1) {
+            if (right != null && right.leftHeight() > right.rightHeight()) {
+                //先对当前右节点（右子树）--->右旋转
+                this.right.rightRot();
+                //再对当前节点进行过左旋转
+                this.leftRot();
+            } else {//否则 直接对当前节点进行过左旋转
+                this.leftRot();
+            }
+            return;//必须要，否则刚调整完 有可能走下面代码  造成意想不到的局面
+        }
+
+        //当添加完一个节点之后 如果  左子树高度-右子树高度>1 右旋转
+        if (leftHeight() - rightHeight() > 1) {
+            //当它的左子树的右子树的高度>它的左子树的左子树的高度
+            if (left != null && left.rightHeight() > left.leftHeight()) {
+                //先对当前左节点（左子树）--->左旋转
+                this.left.leftRot();
+                //再对当前节点进行右旋转
+                this.rightRot();
+            } else {//否则 直接对当前节点进行过右旋转
+                this.rightRot();
+            }
+            return;
+        }
+
+    }
+
+    /**
+     * @Description: 查找要删除的节点
+     * @Param:
+     * @return: 找到就返回 要删除的节点，否则返回null
+     * @Author: ypa
+     * @Date: 2021/5/24
+     */
+    public Node search(int targert) {
+        if (this.value == targert) {
+            return this;
+        } else if (targert < this.value && this.left != null) {
+            return left.search(targert);
+        } else if (targert >= this.value && this.right != null) {//"="号的情况与创建二叉排序树要一致
+            return this.right.search(targert);
+        } else {
+            return null;
+        }
+
+    }
+
+    /**
+     * @Description: 查找要删除节点的夫父节点
+     * @Param:
+     * @return: 找到就返回父节点，否则返回null
+     * @Author: ypa
+     * @Date: 2021/5/24
+     */
+    public Node searchParent(int target) {
+        if ((this.left != null && this.left.value == target) || (this.right != null && this.right.value == target)) {
+            return this;
+        } else {
+            if (target < this.value && this.left != null) {//向左子树递归查找
+                return this.left.searchParent(target);
+            } else if (target >= this.value && this.right != null) {//向右子树递归查找
+                return this.right.searchParent(target);
+            } else {
+                return null;//没有找到父节点
+            }
+        }
+    }
+
+    /**
+     * @Description: 求树的高度
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/25
+     */
+    public int height() {
+        return Math.max(this.left == null ? 0 : this.left.height(), this.right == null ? 0 : this.right.height()) + 1;
+    }
+
+    /**
+     * @Description: 求左子树的高度
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/25
+     */
+    public int leftHeight() {
+        if (this.left == null)
+            return 0;
+        return this.left.leftHeight() + 1;
+    }
+
+    /**
+     * @Description: 右子树的高度
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/25
+     */
+    public int rightHeight() {
+        if (this.right == null)
+            return 0;
+        return this.right.leftHeight() + 1;
+    }
+
+    /**
+     * @Description: 左旋转
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/26
+     */
+    /*
+        思路：
+            1、创建一个新的节点newNode ，值等于根节点的值
+            2、把新节点的左子树设置成当前节点的左子树
+            3、把新节点的右子树设置成为当前节点的右子树的左子树
+            4、把当前节点的值换为右子节点的值
+            5、把当前节点的右子树设置成为右子树的右子树
+            6、把当前节点的左子树设置成为新节点
+    * */
+    private void leftRot() {
+        Node newNode = new Node(this.value);
+        newNode.left = this.left;
+        newNode.right = this.right.left;
+        this.value = this.right.value;
+        this.right = this.right.right;
+        this.left = newNode;
+    }
+
+    /**
+     * @Description: 右旋转
+     * @Param:
+     * @return:
+     * @Author: ypa
+     * @Date: 2021/5/26
+     */
+    /*
+        思路：
+            1、创建一个新的节点newNode ，值等于根节点的值
+            2、把新节点的右子树设置成当前节点的右子树
+            3、把新节点的左子树设置成为当前节点的左子树的右子树
+            4、把当前节点的值换为左子节点的值
+            5、把当前节点的左子树设置成为左子树的左子树
+            6、把当前节点的右子树设置成为新节点
+    * */
+    private void rightRot() {
+        Node newNode = new Node(this.value);
+        newNode.right = this.right;
+        newNode.left = this.left.right;
+        this.value = this.left.value;
+        this.left = this.left.left;
+        this.right = newNode;
+    }
+}
+
